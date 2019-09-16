@@ -19,17 +19,16 @@ Vert.x implementation that connects to a Mongo database
     oc create -f template.yaml
     oc new-app --template=home-assignment
 
-### Test Calls
+### Testing
 
-    API_URL=$(oc get routes api-gateway --template={{.spec.host}})
+1. Get the generated hostname
 
+        API_URL=$(oc get routes api-gateway --template={{.spec.host}})
 
-    curl http://$API_URL/gateway/projects
+2. Make some API calls
 
-    curl http://$API_URL/gateway/projects/1
-
-    curl http://$API_URL/gateway/projects/status/COMPLETED
-
-    curl http://$API_URL/gateway/freelancers
-
-    curl http://$API_URL/gateway/freelancers/1    
+        curl http://$API_URL/gateway/projects
+        curl http://$API_URL/gateway/projects/1
+        curl http://$API_URL/gateway/projects/status/COMPLETED
+        curl http://$API_URL/gateway/freelancers
+        curl http://$API_URL/gateway/freelancers/1    
