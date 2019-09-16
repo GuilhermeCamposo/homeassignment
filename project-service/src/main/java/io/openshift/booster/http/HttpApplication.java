@@ -46,7 +46,7 @@ public class HttpApplication extends AbstractVerticle {
 
         vertx.createHttpServer()
                 .requestHandler(router::accept)
-                .listen(config().getInteger("catalog.http.port", 8081), result -> {
+                .listen(config().getInteger("catalog.http.port", 8080), result -> {
                     if (result.succeeded()) {
                         System.out.println("Server Started");
                         startFuture.complete();

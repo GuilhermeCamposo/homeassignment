@@ -1,0 +1,545 @@
+apiVersion: template.openshift.io/v1
+kind: Template
+metadata:
+  name: home-assignment
+  labels:
+      template: homeassignment
+objects:
+- apiVersion: image.openshift.io/v1
+  kind: ImageStream
+  metadata:
+    labels:
+      app: api-gateway
+    name: api-gateway
+  spec:
+    lookupPolicy:
+      local: false
+    tags:
+    - name: latest
+- apiVersion: image.openshift.io/v1
+  kind: ImageStream
+  metadata:
+    labels:
+      app: freelancer-service
+    name: freelancer-service
+  spec:
+    lookupPolicy:
+      local: false
+    tags:
+    - name: latest
+- apiVersion: image.openshift.io/v1
+  kind: ImageStream
+  metadata:
+    labels:
+      app: project-service
+    name: project-service
+  spec:
+    lookupPolicy:
+      local: false
+    tags:
+    - name: latest
+
+- apiVersion: build.openshift.io/v1
+  kind: BuildConfig
+  metadata:
+    labels:
+      app: project-service
+    name: project-service
+  spec:
+    output:
+      to:
+        kind: ImageStreamTag
+        name: project-service:latest
+    runPolicy: Serial
+    source:
+      contextDir: project-service
+      git:
+        uri: https://github.com/GuilhermeCamposo/homeassignment.git
+      type: Git
+    strategy:
+      sourceStrategy:
+        from:
+          kind: DockerImage
+          name: registry.redhat.io/redhat-openjdk-18/openjdk18-openshift:latest
+      type: Source
+    successfulBuildsHistoryLimit: 5
+    triggers:
+    - type: ConfigChange
+- apiVersion: build.openshift.io/v1
+  kind: BuildConfig
+  metadata:
+    labels:
+      app: freelancer-service
+    name: freelancer-service
+  spec:
+    output:
+      to:
+        kind: ImageStreamTag
+        name: freelancer-service:latest
+    runPolicy: Serial
+    source:
+      contextDir: freelancer-service
+      git:
+        uri: https://github.com/GuilhermeCamposo/homeassignment.git
+      type: Git
+    strategy:
+      sourceStrategy:
+        from:
+          kind: DockerImage
+          name: registry.redhat.io/redhat-openjdk-18/openjdk18-openshift:latest
+      type: Source
+    successfulBuildsHistoryLimit: 5
+    triggers:
+    - type: ConfigChange
+- apiVersion: build.openshift.io/v1
+  kind: BuildConfig
+  metadata:
+    labels:
+      app: api-gateway
+    name: api-gateway
+  spec:
+    output:
+      to:
+        kind: ImageStreamTag
+        name: api-gateway:latest
+    runPolicy: Serial
+    source:
+      contextDir: api-gateway
+      git:
+        uri: https://github.com/GuilhermeCamposo/homeassignment.git
+      type: Git
+    strategy:
+      sourceStrategy:
+        from:
+          kind: DockerImage
+          name: registry.redhat.io/redhat-openjdk-18/openjdk18-openshift:latest
+      type: Source
+    successfulBuildsHistoryLimit: 5
+    triggers:
+    - type: ConfigChange
+
+- apiVersion: apps.openshift.io/v1
+  kind: DeploymentConfig
+  metadata:
+    labels:
+      app: mongo
+    name: mongo
+  spec:
+    replicas: 1
+    selector:
+      app: mongo
+      deploymentconfig: mongo
+    strategy:
+      activeDeadlineSeconds: 21600
+      resources: {}
+      rollingParams:
+        intervalSeconds: 1
+        maxSurge: 25%
+        maxUnavailable: 25%
+        timeoutSeconds: 600
+        updatePeriodSeconds: 1
+      type: Rolling
+    template:
+      metadata:
+        labels:
+          app: mongo
+          deploymentconfig: mongo
+      spec:
+        containers:
+        - env:
+          - name: MONGO_INITDB_ROOT_USERNAME
+            value: mongoadmin
+          - name: MONGO_INITDB_ROOT_PASSWORD
+            value: secret
+          - name: MONGO_INITDB_DATABASE
+            value: mongo_db
+          image: mongo:latest
+          imagePullPolicy: Always
+          name: mongo
+          ports:
+          - containerPort: 27017
+            protocol: TCP
+          resources: {}
+          terminationMessagePath: /dev/termination-log
+          terminationMessagePolicy: File
+          volumeMounts:
+          - mountPath: /data/configdb
+            name: mongo-1
+          - mountPath: /data/db
+            name: mongo-2
+        dnsPolicy: ClusterFirst
+        restartPolicy: Always
+        schedulerName: default-scheduler
+        securityContext: {}
+        terminationGracePeriodSeconds: 30
+        volumes:
+        - emptyDir: {}
+          name: mongo-1
+        - emptyDir: {}
+          name: mongo-2
+    test: false
+    triggers:
+    - type: ConfigChange
+    - imageChangeParams:
+        automatic: true
+        containerNames:
+        - mongo
+        from:
+          kind: ImageStreamTag
+          name: mongo:latest
+          namespace: myproject
+      type: ImageChange
+- apiVersion: apps.openshift.io/v1
+  kind: DeploymentConfig
+  metadata:
+    labels:
+      app: postgres
+    name: postgres
+  spec:
+    replicas: 1
+    selector:
+      app: postgres
+      deploymentconfig: postgres
+    strategy:
+      activeDeadlineSeconds: 21600
+      resources: {}
+      rollingParams:
+        intervalSeconds: 1
+        maxSurge: 25%
+        maxUnavailable: 25%
+        timeoutSeconds: 600
+        updatePeriodSeconds: 1
+      type: Rolling
+    template:
+      metadata:
+        labels:
+          app: postgres
+          deploymentconfig: postgres
+      spec:
+        containers:
+        - env:
+          - name: POSTGRES_PASSWORD
+            value: admin
+          - name: POSTGRES_USER
+            value: admin
+          - name: POSTGRES_DB
+            value: freelancer
+          image: postgres:latest
+          imagePullPolicy: Always
+          name: postgres
+          ports:
+          - containerPort: 5432
+            protocol: TCP
+          resources: {}
+          terminationMessagePath: /dev/termination-log
+          terminationMessagePolicy: File
+          volumeMounts:
+          - mountPath: /var/lib/postgresql/data
+            name: postgres-1
+        dnsPolicy: ClusterFirst
+        restartPolicy: Always
+        schedulerName: default-scheduler
+        securityContext: {}
+        terminationGracePeriodSeconds: 30
+        volumes:
+        - emptyDir: {}
+          name: postgres-1
+    test: false
+    triggers:
+    - type: ConfigChange
+    - imageChangeParams:
+        automatic: true
+        containerNames:
+        - postgres
+        from:
+          kind: ImageStreamTag
+          name: postgres:latest
+          namespace: myproject
+      type: ImageChange
+- apiVersion: apps.openshift.io/v1
+  kind: DeploymentConfig
+  metadata:
+    labels:
+      app: project-service
+    name: project-service
+  spec:
+    replicas: 1
+    revisionHistoryLimit: 10
+    selector:
+      app: project-service
+      deploymentconfig: project-service
+    strategy:
+      activeDeadlineSeconds: 21600
+      resources: {}
+      rollingParams:
+        intervalSeconds: 1
+        maxSurge: 25%
+        maxUnavailable: 25%
+        timeoutSeconds: 600
+        updatePeriodSeconds: 1
+      type: Rolling
+    template:
+      metadata:
+        labels:
+          app: project-service
+          deploymentconfig: project-service
+      spec:
+        containers:
+        - image: project-service:latest
+          imagePullPolicy: Always
+          name: project-service
+          ports:
+          - containerPort: 8080
+            name: http
+            protocol: TCP
+          terminationMessagePath: /dev/termination-log
+          terminationMessagePolicy: File
+        dnsPolicy: ClusterFirst
+        restartPolicy: Always
+        schedulerName: default-scheduler
+        terminationGracePeriodSeconds: 30
+    test: false
+    triggers:
+    - type: ConfigChange
+    - imageChangeParams:
+        automatic: true
+        containerNames:
+        - project-service
+        from:
+          kind: ImageStreamTag
+          name: project-service:latest
+      type: ImageChange
+- apiVersion: apps.openshift.io/v1
+  kind: DeploymentConfig
+  metadata:
+    labels:
+      app: freelancer-service
+    name: freelancer-service
+  spec:
+    replicas: 1
+    revisionHistoryLimit: 10
+    selector:
+      app: freelancer-service
+      deploymentconfig: freelancer-service
+    strategy:
+      activeDeadlineSeconds: 21600
+      resources: {}
+      rollingParams:
+        intervalSeconds: 1
+        maxSurge: 25%
+        maxUnavailable: 25%
+        timeoutSeconds: 600
+        updatePeriodSeconds: 1
+      type: Rolling
+    template:
+      metadata:
+        labels:
+          app: freelancer-service
+          deploymentconfig: freelancer-service
+      spec:
+        containers:
+        - image: freelancer-service:latest
+          imagePullPolicy: Always
+          name: freelancer-service
+          ports:
+          - containerPort: 8080
+            name: http
+            protocol: TCP
+          terminationMessagePath: /dev/termination-log
+          terminationMessagePolicy: File
+        dnsPolicy: ClusterFirst
+        restartPolicy: Always
+        schedulerName: default-scheduler
+        terminationGracePeriodSeconds: 30
+    test: false
+    triggers:
+    - type: ConfigChange
+    - imageChangeParams:
+        automatic: true
+        containerNames:
+        - freelancer-service
+        from:
+          kind: ImageStreamTag
+          name: freelancer-service:latest
+      type: ImageChange
+- apiVersion: apps.openshift.io/v1
+  kind: DeploymentConfig
+  metadata:
+    labels:
+      app: api-gateway
+    name: api-gateway
+  spec:
+    replicas: 1
+    revisionHistoryLimit: 10
+    selector:
+      app: api-gateway
+      deploymentconfig: api-gateway
+    strategy:
+      activeDeadlineSeconds: 21600
+      resources: {}
+      rollingParams:
+        intervalSeconds: 1
+        maxSurge: 25%
+        maxUnavailable: 25%
+        timeoutSeconds: 600
+        updatePeriodSeconds: 1
+      type: Rolling
+    template:
+      metadata:
+        labels:
+          app: api-gateway
+          deploymentconfig: api-gateway
+      spec:
+        containers:
+        - image: api-gateway:latest
+          imagePullPolicy: Always
+          name: api-gateway
+          ports:
+          - containerPort: 8080
+            name: http
+            protocol: TCP
+          terminationMessagePath: /dev/termination-log
+          terminationMessagePolicy: File
+        dnsPolicy: ClusterFirst
+        restartPolicy: Always
+        schedulerName: default-scheduler
+        terminationGracePeriodSeconds: 30
+    test: false
+    triggers:
+    - type: ConfigChange
+    - imageChangeParams:
+        automatic: true
+        containerNames:
+        - api-gateway
+        from:
+          kind: ImageStreamTag
+          name: api-gateway:latest
+      type: ImageChange
+
+- apiVersion: v1
+  kind: Service
+  metadata:
+    labels:
+      app: mongo
+    name: mongo
+  spec:
+    ports:
+    - name: 27017-tcp
+      port: 27017
+      protocol: TCP
+      targetPort: 27017
+    selector:
+      deploymentconfig: mongo
+    sessionAffinity: None
+    type: ClusterIP
+- apiVersion: v1
+  kind: Service
+  metadata:
+    annotations:
+    labels:
+      app: postgres
+    name: postgres
+  spec:
+    ports:
+    - name: 5432-tcp
+      port: 5432
+      protocol: TCP
+      targetPort: 5432
+    selector:
+      deploymentconfig: postgres
+    sessionAffinity: None
+    type: ClusterIP
+- apiVersion: v1
+  kind: Service
+  metadata:
+    labels:
+      app: project-service
+    name: project-service
+  spec:
+    ports:
+    - name: http
+      port: 8080
+      protocol: TCP
+      targetPort: 8080
+    selector:
+      app: project-service
+      deploymentconfig: project-service
+    sessionAffinity: None
+    type: ClusterIP
+- apiVersion: v1
+  kind: Service
+  metadata:
+    labels:
+      app: freelancer-service
+    name: freelancer-service
+  spec:
+    ports:
+    - name: http
+      port: 8080
+      protocol: TCP
+      targetPort: 8080
+    selector:
+      app: freelancer-service
+      deploymentconfig: freelancer-service
+    sessionAffinity: None
+    type: ClusterIP
+- apiVersion: v1
+  kind: Service
+  metadata:
+    labels:
+      app: api-gateway
+    name: api-gateway
+  spec:
+    ports:
+    - name: http
+      port: 8080
+      protocol: TCP
+      targetPort: 8080
+    selector:
+      app: api-gateway
+      deploymentconfig: api-gateway
+    sessionAffinity: None
+    type: ClusterIP
+
+- apiVersion: route.openshift.io/v1
+  kind: Route
+  metadata:
+    labels:
+      app: project-service
+    name: project-service
+  spec:
+    port:
+      targetPort: http
+    to:
+      kind: Service
+      name: project-service
+      weight: 100
+    wildcardPolicy: None
+- apiVersion: route.openshift.io/v1
+  kind: Route
+  metadata:
+    labels:
+      app: freelancer-service
+    name: freelancer-service
+  spec:
+    port:
+      targetPort: http
+    to:
+      kind: Service
+      name: freelancer-service
+      weight: 100
+    wildcardPolicy: None
+- apiVersion: route.openshift.io/v1
+  kind: Route
+  metadata:
+    labels:
+      app: api-gateway
+    name: api-gateway
+  spec:
+    port:
+      targetPort: http
+    to:
+      kind: Service
+      name: api-gateway
+      weight: 100
+    wildcardPolicy: None

@@ -10,10 +10,10 @@ Before running this example you need to have a running MongoDB instance.
 
 # API Call examples
 ## Get All  projects
-    curl localhost:8081/projects
+    curl localhost:8080/projects
 
 ## Get By Id
-    curl localhost:8081/projects/1
+    curl localhost:8080/projects/1
 
 ## Get Projects by Status
-    curl localhost:8081/projects/status/COMPLETED
+    curl localhost:8080/projects/status/COMPLETED
