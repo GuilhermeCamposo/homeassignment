@@ -7,11 +7,10 @@
     <version>23</version>
   </parent>
   <groupId>org.openshift.appgen</groupId>
-  <artifactId>project-service-vertx</artifactId>
+  <artifactId>project-service</artifactId>
   <version>1.0.0</version>
   <packaging>jar</packaging>
-  <name>project-service-vertx</name>
-  <description>Generated Application 'project-service-vertx'</description>
+  <name>project-service</name>
   <properties>
     <slf4j.version>1.7.25</slf4j.version>
     <vertx.version>3.7.1.redhat-00012</vertx.version>
