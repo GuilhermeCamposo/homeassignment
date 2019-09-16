@@ -1,5 +1,7 @@
 # Home Assignment
 
+GIT REPO: https://github.com/GuilhermeCamposo/homeassignment
+
 ## Projects
 
 ### API Gateway
@@ -13,11 +15,15 @@ Vert.x implementation that connects to a Mongo database
 
 ## Testing in OpenShift
 
+If you don't have access to a OCP cluster, is highly recommend to test this using CDK.
+
 ### Preparing The Environment
 
     oc new-project home-assignment
     oc create -f template.yaml
     oc new-app --template=home-assignment
+
+ps: This templates use images from Red Hat registry where authentication is required.    
 
 ### Testing
 
