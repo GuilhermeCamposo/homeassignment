@@ -12,7 +12,7 @@ public class FreelancerService {
 
     private Client client = ClientBuilder.newClient();
 
-    private static final String FREELANCER_SERVICE_URL = "http://localhost:8082";
+    private static final String FREELANCER_SERVICE_URL = "http://freelancer-service:8080";
 
     public String getAllFreelancers(){
         WebTarget target = client.target(FREELANCER_SERVICE_URL).path("/freelancers");

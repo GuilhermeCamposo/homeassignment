@@ -11,7 +11,7 @@ public class ProjectService {
 
     private Client client = ClientBuilder.newClient();
 
-    private static final String PROJECT_SERVICE_URL = "http://localhost:8081";
+    private static final String PROJECT_SERVICE_URL = "http://project-service:8080";
 
     public String getAllProjects(){
         WebTarget target = client.target(PROJECT_SERVICE_URL).path("/projects");
