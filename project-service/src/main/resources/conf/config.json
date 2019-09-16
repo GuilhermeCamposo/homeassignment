@@ -1,0 +1,4 @@
+{
+  "connection_string" : "mongodb://mongoadmin:secret@localhost:27017" ,
+  "db_name": "mongo_db"
+}
