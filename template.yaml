@@ -38,6 +38,34 @@ objects:
       local: false
     tags:
     - name: latest
+- apiVersion: image.openshift.io/v1
+  kind: ImageStream
+  metadata:
+    name: mongo
+  spec:
+    lookupPolicy:
+      local: false
+    tags:
+      - from:
+          kind: DockerImage
+          name: 'mongo:latest'
+        name: 'latest'
+        referencePolicy:
+          type: Source
+- apiVersion: image.openshift.io/v1
+  kind: ImageStream
+  metadata:
+    name: postgres
+  spec:
+    lookupPolicy:
+      local: false
+    tags:
+      - from:
+          kind: DockerImage
+          name: 'postgres:latest'
+        name: 'latest'
+        referencePolicy:
+          type: Source
 
 - apiVersion: build.openshift.io/v1
   kind: BuildConfig
@@ -187,7 +215,6 @@ objects:
         from:
           kind: ImageStreamTag
           name: mongo:latest
-          namespace: myproject
       type: ImageChange
 - apiVersion: apps.openshift.io/v1
   kind: DeploymentConfig
@@ -254,7 +281,6 @@ objects:
         from:
           kind: ImageStreamTag
           name: postgres:latest
-          namespace: myproject
       type: ImageChange
 - apiVersion: apps.openshift.io/v1
   kind: DeploymentConfig
